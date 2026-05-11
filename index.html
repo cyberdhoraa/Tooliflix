@@ -164,7 +164,7 @@
         { id: "case_converter", name: "Case Converter", category: "Writing Tools", desc: "UPPER/lower/Title", icon: "fas fa-font", type: "caseConverter" },
         { id: "json_formatter", name: "JSON Formatter", category: "Developer Tools", desc: "Beautify JSON", icon: "fab fa-js", type: "jsonFormatter" },
         { id: "password_gen", name: "Password Generator", category: "Developer Tools", desc: "Secure passwords", icon: "fas fa-key", type: "passwordGen" },
-        { id: "qr_gen", name: "QR Generator", category: "Developer Tools", desc: "Custom QR codes", icon: "fas fa-qrcode", type: "qrGen" },
+        { id: "qr_gen", name: "QR Generator", category: "Developer Tools", desc: "Custom QR codes", icon: "fas fa-qrcode", type: "qrGen", link: "qr-generator.html" },
         { id: "bmi_calc", name: "BMI Calculator", category: "Calculators", desc: "Body mass index", icon: "fas fa-heartbeat", type: "bmi" },
         { id: "length_conv", name: "Length Converter", category: "Converters", desc: "m, km, miles", icon: "fas fa-ruler", type: "lengthConv" },
         { id: "temp_conv", name: "Temperature", category: "Converters", desc: "C to F to K", icon: "fas fa-thermometer-half", type: "tempConv" },
@@ -213,7 +213,120 @@
             caseConverter: (c) => { c.innerHTML = `<textarea id="caseInput" rows="3"></textarea><div><button id="toUpper">UPPER</button><button id="toLower">lower</button><button id="toTitle">Title Case</button></div><div id="caseOutput" class="result-area"></div>`; const inp = document.getElementById('caseInput'); const out = document.getElementById('caseOutput'); document.getElementById('toUpper').onclick = () => out.innerText = inp.value.toUpperCase(); document.getElementById('toLower').onclick = () => out.innerText = inp.value.toLowerCase(); document.getElementById('toTitle').onclick = () => out.innerText = inp.value.replace(/\b\w/g, l => l.toUpperCase()); },
             jsonFormatter: (c) => { c.innerHTML = `<textarea id="jsonIn" rows="5" placeholder='{"key":"value"}'></textarea><button id="formatJson">Format</button><pre id="jsonOut" class="result-area"></pre>`; document.getElementById('formatJson').onclick = () => { try{ const obj = JSON.parse(document.getElementById('jsonIn').value); document.getElementById('jsonOut').innerText = JSON.stringify(obj, null, 2); }catch(e){ document.getElementById('jsonOut').innerText = 'Invalid JSON'; } }; },
             passwordGen: (c) => { c.innerHTML = `<label>Length: <input type="number" id="pwdLen" value="12"></label><button id="genPwd">Generate</button><div id="pwdResult" class="result-area"></div>`; document.getElementById('genPwd').onclick = () => { const len = parseInt(document.getElementById('pwdLen').value)||12; const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()"; let pwd = ""; for(let i=0;i<len;i++) pwd += chars.charAt(Math.floor(Math.random()*chars.length)); document.getElementById('pwdResult').innerText = pwd; }; },
-            qrGen: (c) => { c.innerHTML = `<input type="text" id="qrText" placeholder="Enter text or URL"><button id="genQR">Generate QR</button><div id="qrCanvasResult" style="text-align:center;"></div>`; document.getElementById('genQR').onclick = () => { const text = document.getElementById('qrText').value; if(!text) return; const qr = qrcode(0, 'M'); qr.addData(text); qr.make(); const size = qr.getModuleCount(); const canvas = document.createElement('canvas'); canvas.width = 200; canvas.height = 200; const ctx = canvas.getContext('2d'); for(let row=0; row<size; row++){ for(let col=0; col<size; col++){ ctx.fillStyle = qr.isDark(row,col) ? '#000' : '#fff'; ctx.fillRect(col*(200/size), row*(200/size), (200/size), (200/size)); } } document.getElementById('qrCanvasResult').innerHTML = ''; document.getElementById('qrCanvasResult').appendChild(canvas); }; },
+                        qrGen: (c) => { 
+                c.innerHTML = `
+                    <div style="text-align: center; padding: 10px;">
+                        <h3 style="margin-bottom: 15px;">🎨 Advanced QR Generator</h3>
+                        <textarea id="qrTextAdvanced" rows="3" placeholder="Enter text or URL" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #ddd;">https://toolifix.com</textarea>
+                        
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <div style="flex: 1;">
+                                <label>QR Color</label>
+                                <input type="color" id="qrColorAdv" value="#000000" style="width: 100%; height: 40px;">
+                            </div>
+                            <div style="flex: 1;">
+                                <label>BG Color</label>
+                                <input type="color" id="bgColorAdv" value="#FFFFFF" style="width: 100%; height: 40px;">
+                            </div>
+                        </div>
+                        
+                        <select id="qrSizeAdv" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 10px;">
+                            <option value="200">Small (200px)</option>
+                            <option value="250" selected>Medium (250px)</option>
+                            <option value="300">Large (300px)</option>
+                            <option value="400">Extra Large (400px)</option>
+                        </select>
+                        
+                        <button id="genQRAdv" style="width: 100%; padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 10px; cursor: pointer; margin-bottom: 10px;">
+                            🚀 Generate QR Code
+                        </button>
+                        
+                        <div id="qrCanvasResultAdv" style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 10px; margin-bottom: 10px;"></div>
+                        
+                        <div style="display: flex; gap: 10px;">
+                            <button id="downloadQRAdv" style="flex: 1; padding: 10px; background: #28a745; color: white; border: none; border-radius: 10px; cursor: pointer;">💾 Download</button>
+                            <button id="copyQRAdv" style="flex: 1; padding: 10px; background: #007bff; color: white; border: none; border-radius: 10px; cursor: pointer;">📋 Copy</button>
+                        </div>
+                    </div>
+                `;
+                
+                let currentCanvas = null;
+                
+                function generateAdvancedQR() {
+                    const text = document.getElementById('qrTextAdvanced').value;
+                    if (!text) {
+                        alert('Please enter text or URL');
+                        return;
+                    }
+                    
+                    const size = parseInt(document.getElementById('qrSizeAdv').value);
+                    const qrColor = document.getElementById('qrColorAdv').value;
+                    const bgColor = document.getElementById('bgColorAdv').value;
+                    
+                    const qr = qrcode(0, 'M');
+                    qr.addData(text);
+                    qr.make();
+                    
+                    const moduleCount = qr.getModuleCount();
+                    const cellSize = size / moduleCount;
+                    const canvas = document.createElement('canvas');
+                    canvas.width = size;
+                    canvas.height = size;
+                    const ctx = canvas.getContext('2d');
+                    
+                    ctx.fillStyle = bgColor;
+                    ctx.fillRect(0, 0, size, size);
+                    
+                    for (let row = 0; row < moduleCount; row++) {
+                        for (let col = 0; col < moduleCount; col++) {
+                            if (qr.isDark(row, col)) {
+                                ctx.fillStyle = qrColor;
+                                ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+                            }
+                        }
+                    }
+                    
+                    const container = document.getElementById('qrCanvasResultAdv');
+                    container.innerHTML = '';
+                    container.appendChild(canvas);
+                    currentCanvas = canvas;
+                }
+                
+                function downloadQR() {
+                    if (!currentCanvas) {
+                        alert('Generate QR code first');
+                        return;
+                    }
+                    const link = document.createElement('a');
+                    link.download = 'qrcode.png';
+                    link.href = currentCanvas.toDataURL();
+                    link.click();
+                }
+                
+                async function copyQR() {
+                    if (!currentCanvas) {
+                        alert('Generate QR code first');
+                        return;
+                    }
+                    try {
+                        const blob = await new Promise(resolve => currentCanvas.toBlob(resolve));
+                        await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+                        alert('✅ QR Code copied!');
+                    } catch(err) {
+                        alert('❌ Copy failed');
+                    }
+                }
+                
+                document.getElementById('genQRAdv').onclick = generateAdvancedQR;
+                document.getElementById('downloadQRAdv').onclick = downloadQR;
+                document.getElementById('copyQRAdv').onclick = copyQR;
+                document.getElementById('qrTextAdvanced').oninput = generateAdvancedQR;
+                document.getElementById('qrColorAdv').oninput = generateAdvancedQR;
+                document.getElementById('bgColorAdv').oninput = generateAdvancedQR;
+                document.getElementById('qrSizeAdv').onchange = generateAdvancedQR;
+                
+                generateAdvancedQR();
+            },
             bmi: (c) => { c.innerHTML = `<input type="number" id="weight" placeholder="Weight (kg)"><input type="number" id="heightCm" placeholder="Height (cm)"><button id="calcBMI">Calculate</button><div id="bmiOut" class="result-area"></div>`; document.getElementById('calcBMI').onclick = () => { const w = parseFloat(document.getElementById('weight').value); const h = parseFloat(document.getElementById('heightCm').value)/100; if(w && h){ const bmi = (w/(h*h)).toFixed(1); document.getElementById('bmiOut').innerText = `BMI: ${bmi} - ${bmi<18.5?'Underweight':bmi<25?'Normal':bmi<30?'Overweight':'Obese'}`; } }; },
             lengthConv: (c) => { c.innerHTML = `<input type="number" id="lenVal" placeholder="Value"><select id="lenFrom"><option>meters</option><option>kilometers</option><option>miles</option></select> to <select id="lenTo"><option>meters</option><option>kilometers</option><option>miles</option></select><button id="convLen">Convert</button><div id="lenOut" class="result-area"></div>`; const conv = { meters:1, kilometers:1000, miles:1609.34 }; document.getElementById('convLen').onclick = () => { let val = parseFloat(document.getElementById('lenVal').value); const from = document.getElementById('lenFrom').value; const to = document.getElementById('lenTo').value; const meters = val * conv[from]; const result = meters / conv[to]; document.getElementById('lenOut').innerText = `${val} ${from} = ${result.toFixed(4)} ${to}`; }; },
             tempConv: (c) => { c.innerHTML = `<input type="number" id="tempVal"><select id="tempType"><option>Celsius</option><option>Fahrenheit</option></select> → <select id="tempTarget"><option>Fahrenheit</option><option>Celsius</option></select><button id="convTemp">Convert</button><div id="tempOut"></div>`; document.getElementById('convTemp').onclick = () => { let val = parseFloat(document.getElementById('tempVal').value); const from = document.getElementById('tempType').value; const to = document.getElementById('tempTarget').value; if(from === "Celsius" && to === "Fahrenheit") document.getElementById('tempOut').innerHTML = `${val}°C = ${(val*9/5+32).toFixed(1)}°F`; else if(from === "Fahrenheit" && to === "Celsius") document.getElementById('tempOut').innerHTML = `${val}°F = ${((val-32)*5/9).toFixed(1)}°C`; else document.getElementById('tempOut').innerHTML = val; }; },
