@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Google Fonts Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <!-- Add CSS for PDF Merger -->
+    <link rel="stylesheet" href="pdf-merge.css">
     <!-- PDF-LIB for merging PDFs -->
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <!-- QRCode Generator (pure JS) -->
@@ -247,6 +249,23 @@
     document.getElementById('scrollTopBtn').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
     window.addEventListener('load', () => { document.getElementById('loaderOverlay').style.opacity='0'; setTimeout(()=>document.getElementById('loaderOverlay').style.display='none',400); });
     renderPopular(); renderRecentlyUsed(); renderGrouped(); buildDropdowns();
+</script>
+    <!-- PDF Merge Scripts -->
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="pdf-merge.js"></script>
+
+<!-- Update the PDF Merge tool to use the new advanced UI -->
+<script>
+    // Override the PDF merge tool in your main app
+    const originalOpenToolModal = window.openToolModal;
+    if (originalOpenToolModal) {
+        window.openToolModal = function(tool) {
+            if (tool.id === 'pdf_merge') {
+                openPDFMerger();
+            } else {
+                originalOpenToolModal(tool);
+            }
+        };
 </script>
 </body>
 </html>
